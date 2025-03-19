@@ -1,0 +1,79 @@
+---
+title: "AniRevo Artist Alley System: Should there be change?"
+author: "Naphyla"
+format: html
+---
+
+## Why was this created?
+
+The original survey was created to better understand how artists feel about the current format of artist alley participant selection. It has become increasingly difficult to be able to table at AniRevo, especially for local and new artists, under a first come first serve (FCFS) model.
+
+Note: Neither the survey nor the analysis is affiliated with AniRevo in any way. This form is made by an artist to try and understand artists' needs
+
+```{r}
+if (!require("pacman")) {
+  install.packages("pacman")
+  library(pacman)
+} 
+
+p_load(
+  googlesheets4, gargle,
+  tidyverse
+)
+
+```
+
+
+```{r}
+gs4_auth(email = "*@gmail.com")
+
+# append all google sheets to an object
+all_gsheets <-gs4_find()
+
+df <- theSheets |> 
+  filter(name == "AniRevo Artist Alley Format Survey (Responses)") |> 
+  pull(id) |> 
+  read_sheet(sheet = 1)
+```
+
+
+```{r}
+df <- theSheets |> 
+  filter(name == "AniRevo Artist Alley Format Survey (Responses)") |> 
+  pull(id) |> 
+  read_sheet(sheet = 1)
+
+```
+## Respondant Demographics
+
+```{r}
+df |> 
+  mutate(`What geographical region do you live in?` = fct_relevel(
+    `What geographical region do you live in?`,
+    c("Another Canadian province",
+      "Outside of the Greater Vancouver Area but within BC",
+      "Greater Vancouver Area")
+  )) |> 
+  group_by(`What geographical region do you live in?`) |> 
+  summarise(n = n()) |> 
+  ungroup() |> 
+  mutate(Proportion = n/sum(n)) |> 
+  ggplot(aes(x = Proportion, y = "", fill = `What geographical region do you live in?`)) +
+  geom_col() +
+  scale_x_continuous(labels = scales::percent_format(decimal.mark = ",", accuracy = 1)) +
+  geom_text(aes(label = paste0(round(Proportion * 100, 0), "%")),
+            position = position_stack(vjust = 0.5)) +
+  scale_fill_brewer(palette = "Set2", labels = function(x) str_wrap(x, width = 15),
+                    guide = guide_legend(reverse = TRUE)) +
+  theme_minimal() +
+  theme(
+    legend.position="top"
+  ) +
+  labs(
+    x = "", 
+    y = ""
+  )
+
+```
+
+
