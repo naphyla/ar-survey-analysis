@@ -1,7 +1,10 @@
 ---
 title: "AniRevo Artist Alley System: Should there be change?"
 author: "Naphyla"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show Code"
 ---
 
 ## Why was this created?
@@ -11,6 +14,10 @@ The original survey was created to better understand how artists feel about the 
 Note: Neither the survey nor the analysis is affiliated with AniRevo in any way. This form is made by an artist to try and understand artists' needs
 
 ```{r}
+#| echo: false
+#| warning: false
+
+# load libraries
 if (!require("pacman")) {
   install.packages("pacman")
   library(pacman)
@@ -18,32 +25,26 @@ if (!require("pacman")) {
 
 p_load(
   googlesheets4, gargle,
-  tidyverse
+  tidyverse,
+  flextable
 )
 
-```
+# load file
+source("helper_functions.R")
+all_gsheets <-gs4_find() # append all google sheets to an object
 
-
-```{r}
-gs4_auth(email = "*@gmail.com")
-
-# append all google sheets to an object
-all_gsheets <-gs4_find()
-
-df <- theSheets |> 
+# preprocessing
+df <- all_gsheets |> 
   filter(name == "AniRevo Artist Alley Format Survey (Responses)") |> 
   pull(id) |> 
-  read_sheet(sheet = 1)
-```
-
-
-```{r}
-df <- theSheets |> 
-  filter(name == "AniRevo Artist Alley Format Survey (Responses)") |> 
-  pull(id) |> 
-  read_sheet(sheet = 1)
+  read_sheet(sheet = 1) |> 
+  mutate(
+    year_since_attandence = 2025 - `If yes, what was the most recent year that you boothed at AniRevo? (e.g., 2019)\n\nIf you have never boothed at AniRevo before, please put down 0`,
+    year_since_attandence = na_if(year_since_attandence, 2025)
+  ) 
 
 ```
+
 ## Respondant Demographics
 
 ```{r}
@@ -52,28 +53,52 @@ df |>
     `What geographical region do you live in?`,
     c("Another Canadian province",
       "Outside of the Greater Vancouver Area but within BC",
-      "Greater Vancouver Area")
-  )) |> 
-  group_by(`What geographical region do you live in?`) |> 
-  summarise(n = n()) |> 
+      "Greater Vancouver Area"))) |> 
+      bar_graph(`What geographical region do you live in?`, "Set2")
+```
+
+
+## Past Attendance
+
+```{r}
+df |> 
+  bar_graph(`Have you ever attended AniRevo as an artist in the past?`, "Set1", "white")
+```
+
+
+
+```{r}
+df |> 
+  group_by(year_since_attandence) |> 
+  summarise(`Number of respondants` = n()) |> 
+  rename(`How many years has it been since you last tabled at AniRevo?` = year_since_attandence) |> 
   ungroup() |> 
-  mutate(Proportion = n/sum(n)) |> 
-  ggplot(aes(x = Proportion, y = "", fill = `What geographical region do you live in?`)) +
-  geom_col() +
-  scale_x_continuous(labels = scales::percent_format(decimal.mark = ",", accuracy = 1)) +
-  geom_text(aes(label = paste0(round(Proportion * 100, 0), "%")),
-            position = position_stack(vjust = 0.5)) +
-  scale_fill_brewer(palette = "Set2", labels = function(x) str_wrap(x, width = 15),
-                    guide = guide_legend(reverse = TRUE)) +
-  theme_minimal() +
-  theme(
-    legend.position="top"
-  ) +
-  labs(
-    x = "", 
-    y = ""
-  )
+  mutate(`%` = round(`Number of respondants`/ sum(`Number of respondants`) * 100, 2)) |> 
+  flextable() |> 
+  colformat_double(na_str = "NA", nan_str = "NaN") |> 
+  autofit()
+  
 
 ```
+
+**Note:** `NA` means that the respondant has never tabled at AniRevo in the past.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
