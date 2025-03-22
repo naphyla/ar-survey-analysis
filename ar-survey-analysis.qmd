@@ -40,12 +40,15 @@ df <- all_gsheets |>
   read_sheet(sheet = 1) |> 
   mutate(
     year_since_attandence = 2025 - `If yes, what was the most recent year that you boothed at AniRevo? (e.g., 2019)\n\nIf you have never boothed at AniRevo before, please put down 0`,
-    year_since_attandence = na_if(year_since_attandence, 2025)
-  ) 
+    year_since_attandence = na_if(year_since_attandence, 2025),
+    table_2025 = ifelse(`Were you able to successfully purchase a booth during the most recent drop?` %in% c("Yes", "No, I already have a table from rebooking from last year"), "Secured Table", "Did Not Secure Table")
+  )
 
 ```
 
 ## Respondant Demographics
+
+The majority of respondents reside within the greater Vancouver area.
 
 ```{r}
 df |> 
@@ -54,18 +57,20 @@ df |>
     c("Another Canadian province",
       "Outside of the Greater Vancouver Area but within BC",
       "Greater Vancouver Area"))) |> 
-      bar_graph(`What geographical region do you live in?`, "Set2")
+      bar_graph(`What geographical region do you live in?`, "Set3")
 ```
 
 
 ## Past Attendance
 
+About half of respondants have not tabled at AniRevo or not able to in the past.
+
 ```{r}
 df |> 
-  bar_graph(`Have you ever attended AniRevo as an artist in the past?`, "Set1", "white")
+  bar_graph(`Have you ever attended AniRevo as an artist in the past?`, "Pastel1")
 ```
 
-
+For those who did table before, about half of them tabled last year.
 
 ```{r}
 df |> 
@@ -84,11 +89,47 @@ df |>
 **Note:** `NA` means that the respondant has never tabled at AniRevo in the past.
 
 
+Overall, we can see that roughly half of the respondents were able to secure a table for 2025 either through the drop or from rebooking. 
 
+```{r}
+df |> 
+  bar_graph(`Were you able to successfully purchase a booth during the most recent drop?`, "Set3") + 
+  labs(fill = "Were you able to successfully purchase\na booth during the most recent drop?")
+```
 
+## Opinions on the Current Artist Alley Format at AniRevo
 
+The vast majority of artists would like the current process to be changed. 
 
+```{r}
+df |> 
+  bar_graph(`Do you think AniRevo should change their current FCFS model?`, "Pastel1")
+```
 
+Importantly, artists, **regardless of whether they secured a table for 2025** think the current FCFS model should be changed
+
+```{r}
+df |> 
+  grouped_bar_braph(`Do you think AniRevo should change their current FCFS model?`, table_2025, "Pastel1")
+```
+
+Most respondents expressed a desire to rebook their table if given the opportunity 
+
+```{r}
+df |> 
+  bar_graph(`Do you think AniRevo should offer table rebooking for potential returning artists?`, "Pastel1")
+```
+
+However, there is a much bigger discrepancy between artists who did manage to secure a table versus those who do not. 
+
+Based on artists' responses in the comment section, there is a clear desire for *stability and security*. This may also be a symptom reflecting the uncertainty that comes with a FCFS model: if artists do manage to secure a table, given how difficult it would be to return if they were to give it up, they would be even more likely to want an opportunity to rebook a table for next year.
+
+```{r}
+df |> 
+  grouped_bar_braph(`Do you think AniRevo should offer table rebooking for potential returning artists?`, table_2025, "Pastel1")
+```
+
+### What new format would artists want to see at AniRevo?
 
 
 
